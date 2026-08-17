@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smart Money Footprint Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Smart Money Footprint Pro</h1>
+    <span class="hint">Dashboard 1 · Market Overview</span>
+  </div>
+  <div class="status-bar">
+    <a class="pill navlink" href="/scanner.html">Scanner</a>
+    <a class="pill navlink" href="/portfolio.html">Portfolio</a>
+    <a class="pill navlink" href="/chat.html">AI Chat</a>
+    <a class="pill navlink" href="/backtest.html">Backtest</a>
+    <span id="marketStatus" class="pill">--</span>
+    <span id="lastUpdated" class="muted">--</span>
+    <button id="refreshBtn">Refresh</button>
+  </div>
+</header>
+
+<div id="dhanWarning" class="warning hidden">
+  Dhan API is not configured yet — set DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN in .env and restart the server to see live index/option data.
+</div>
+
+<main class="grid">
+
+  <section class="card" id="card-indices">
+    <div class="card-head">
+      <h2>Indices</h2>
+      <span class="badge" data-src="index_quotes">--</span>
+    </div>
+    <div class="index-row" id="indexRow"></div>
+  </section>
+
+  <section class="card" id="card-risk">
+    <div class="card-head">
+      <h2>Risk Meter</h2>
+    </div>
+    <div class="risk-gauge">
+      <div class="risk-bar"><div id="riskFill" class="risk-fill"></div></div>
+      <div class="risk-label" id="riskLabel">--</div>
+    </div>
+    <ul id="riskReasons" class="reasons"></ul>
+  </section>
+
+  <section class="card" id="card-fiidii">
+    <div class="card-head">
+      <h2>FII / DII Flow <span class="hint">cash market, ₹ Cr</span></h2>
+      <span class="badge" data-src="fiiDii">--</span>
+    </div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">FII Net</span><span class="value" id="fiiNet">--</span></div>
+      <div class="stat"><span class="label">DII Net</span><span class="value" id="diiNet">--</span></div>
+      <div class="stat"><span class="label">Cumulative</span><span class="value" id="cumNet">--</span></div>
+    </div>
+    <canvas id="fiiDiiChart" height="110"></canvas>
+  </section>
+
+  <section class="card" id="card-oc-NIFTY">
+    <div class="card-head">
+      <h2>NIFTY Option Chain <span class="hint" id="oc-NIFTY-expiry"></span></h2>
+      <span class="badge" data-src="optionChains.NIFTY">--</span>
+    </div>
+    <div class="oc-summary">
+      <div class="stat"><span class="label">Spot</span><span class="value" id="oc-NIFTY-spot">--</span></div>
+      <div class="stat"><span class="label">PCR (OI)</span><span class="value" id="oc-NIFTY-pcr">--</span></div>
+      <div class="stat"><span class="label">Max Pain</span><span class="value" id="oc-NIFTY-maxpain">--</span></div>
+    </div>
+    <canvas id="oc-NIFTY-chart" height="140"></canvas>
+  </section>
+
+  <section class="card" id="card-oc-BANKNIFTY">
+    <div class="card-head">
+      <h2>BANKNIFTY Option Chain <span class="hint" id="oc-BANKNIFTY-expiry"></span></h2>
+      <span class="badge" data-src="optionChains.BANKNIFTY">--</span>
+    </div>
+    <div class="oc-summary">
+      <div class="stat"><span class="label">Spot</span><span class="value" id="oc-BANKNIFTY-spot">--</span></div>
+      <div class="stat"><span class="label">PCR (OI)</span><span class="value" id="oc-BANKNIFTY-pcr">--</span></div>
+      <div class="stat"><span class="label">Max Pain</span><span class="value" id="oc-BANKNIFTY-maxpain">--</span></div>
+    </div>
+    <canvas id="oc-BANKNIFTY-chart" height="140"></canvas>
+  </section>
+
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

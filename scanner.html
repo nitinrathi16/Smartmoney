@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smart Money Footprint Pro — Scanner</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Smart Money Footprint Pro</h1>
+    <span class="hint">Dashboard 2 · Smart Money Scanner</span>
+  </div>
+  <div class="status-bar">
+    <a class="pill navlink" href="/">Overview</a>
+    <a class="pill navlink" href="/portfolio.html">Portfolio</a>
+    <a class="pill navlink" href="/chat.html">AI Chat</a>
+    <a class="pill navlink" href="/backtest.html">Backtest</a>
+    <span id="marketStatus" class="pill">--</span>
+    <span id="lastUpdated" class="muted">--</span>
+    <button id="refreshBtn">Run Scan</button>
+  </div>
+</header>
+
+<div id="scanWarning" class="warning hidden">
+  Dhan API is not configured — LTP, change %, and futures OI buildup will be unavailable until DHAN_CLIENT_ID/DHAN_ACCESS_TOKEN are set.
+</div>
+
+<main class="scanner-wrap">
+
+  <div class="card" id="alertsPanel" style="margin-bottom:16px;">
+    <div class="card-head">
+      <h2>Recent Alerts</h2>
+      <span class="hint">fires once per symbol per day on state changes</span>
+    </div>
+    <div id="alertsFeed" class="alerts-feed"><span class="muted">Loading...</span></div>
+  </div>
+
+  <div class="slicer-bar" id="slicerBar">
+    <div class="slicer-group">
+      <label for="f-index">Universe</label>
+      <select id="f-index"></select>
+    </div>
+    <div class="slicer-group">
+      <label for="f-search">Stock</label>
+      <input type="text" id="f-search" placeholder="Search symbol..." />
+    </div>
+    <div class="slicer-group">
+      <label for="f-sector">Sector</label>
+      <select id="f-sector"><option value="">All sectors</option></select>
+    </div>
+    <div class="slicer-group">
+      <label for="f-grade">Grade</label>
+      <select id="f-grade">
+        <option value="">All grades</option>
+        <option value="A+">A+</option>
+        <option value="A">A</option>
+        <option value="B+">B+</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label for="f-oi">OI Buildup</label>
+      <select id="f-oi">
+        <option value="">All</option>
+        <option value="Long Build-up">Long Build-up</option>
+        <option value="Short Build-up">Short Build-up</option>
+        <option value="Short Covering">Short Covering</option>
+        <option value="Long Unwinding">Long Unwinding</option>
+        <option value="Neutral">Neutral</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label for="f-volspike">Vol Spike</label>
+      <select id="f-volspike">
+        <option value="">All</option>
+        <option value="yes">Spiking only</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label for="f-sms">Min Smart Money</label>
+      <input type="number" id="f-sms" min="0" max="100" placeholder="0" />
+    </div>
+    <div class="slicer-group">
+      <label for="f-momentum">Min Momentum</label>
+      <input type="number" id="f-momentum" min="0" max="100" placeholder="0" />
+    </div>
+    <div class="slicer-group">
+      <label for="f-breakout">Min Breakout Prob.</label>
+      <input type="number" id="f-breakout" min="0" max="100" placeholder="0" />
+    </div>
+    <div class="slicer-group">
+      <label for="f-swing">Min Swing</label>
+      <input type="number" id="f-swing" min="0" max="100" placeholder="0" />
+    </div>
+    <div class="slicer-group">
+      <label for="f-optopp">Min Option Opp.</label>
+      <input type="number" id="f-optopp" min="0" max="100" placeholder="0" />
+    </div>
+    <div class="slicer-group">
+      <label for="f-risk">Max Risk</label>
+      <input type="number" id="f-risk" min="0" max="100" placeholder="100" />
+    </div>
+    <div class="slicer-group">
+      <label for="f-delivery">Min Delivery %</label>
+      <input type="number" id="f-delivery" min="0" max="100" placeholder="0" />
+    </div>
+    <div class="slicer-actions">
+      <span class="result-count" id="resultCount">--</span>
+      <button id="clearFiltersBtn" class="ghost-btn">Clear filters</button>
+    </div>
+  </div>
+
+  <div class="table-scroll" style="max-height: none;">
+    <table id="scannerTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th data-sort="symbol">Stock</th>
+          <th data-sort="sector">Sector</th>
+          <th data-sort="change_pct">Chg %</th>
+          <th data-sort="smart_money_score">Smart Money</th>
+          <th data-sort="momentum_score">Momentum</th>
+          <th data-sort="breakout_probability">Breakout Prob.</th>
+          <th data-sort="swing_score">Swing</th>
+          <th data-sort="option_opportunity_score">Option Opp.</th>
+          <th data-sort="risk_score">Risk</th>
+          <th data-sort="trade_quality_grade">Grade</th>
+          <th data-sort="volume_spike">Vol Spike</th>
+          <th data-sort="oi_buildup">OI Buildup</th>
+          <th data-sort="delivery_pct">Delivery %</th>
+          <th>Alerts</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="/explain-modal.js"></script>
+<script src="/scanner.js"></script>
+</body>
+</html>

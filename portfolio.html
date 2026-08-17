@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smart Money Footprint Pro — Portfolio</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Smart Money Footprint Pro</h1>
+    <span class="hint">Dashboard 3 · Portfolio</span>
+  </div>
+  <div class="status-bar">
+    <a class="pill navlink" href="/">Overview</a>
+    <a class="pill navlink" href="/scanner.html">Scanner</a>
+    <a class="pill navlink" href="/chat.html">AI Chat</a>
+    <a class="pill navlink" href="/backtest.html">Backtest</a>
+    <span id="marketStatus" class="pill">--</span>
+    <span id="lastUpdated" class="muted">--</span>
+    <span class="badge" data-src="portfolio">--</span>
+    <button id="refreshBtn">Refresh</button>
+  </div>
+</header>
+
+<div id="dhanWarning" class="warning hidden">
+  Dhan API is not configured — set DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN in .env and restart the server to see your live portfolio.
+</div>
+
+<main class="grid">
+
+  <section class="card">
+    <div class="card-head"><h2>Portfolio Value</h2></div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">Invested</span><span class="value tabular" id="pInvested">--</span></div>
+      <div class="stat"><span class="label">Current Value</span><span class="value tabular" id="pCurrent">--</span></div>
+      <div class="stat"><span class="label">Total P&amp;L</span><span class="value tabular" id="pPnl">--</span></div>
+      <div class="stat"><span class="label">Today's P&amp;L</span><span class="value tabular" id="pDayPnl">--</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Funds</h2></div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">Available Balance</span><span class="value tabular" id="fAvail">--</span></div>
+      <div class="stat"><span class="label">Utilized</span><span class="value tabular" id="fUtilized">--</span></div>
+      <div class="stat"><span class="label">Withdrawable</span><span class="value tabular" id="fWithdraw">--</span></div>
+      <div class="stat"><span class="label">Collateral</span><span class="value tabular" id="fCollateral">--</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Concentration</h2></div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">Holdings</span><span class="value tabular" id="cHoldings">--</span></div>
+      <div class="stat"><span class="label">Winners / Losers</span><span class="value tabular" id="cWinLoss">--</span></div>
+      <div class="stat"><span class="label">Largest Position</span><span class="value tabular" id="cLargest">--</span></div>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head"><h2>Sector Allocation</h2></div>
+    <canvas id="sectorChart" height="90"></canvas>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head"><h2>Holdings</h2></div>
+    <div class="table-scroll" style="max-height: none;">
+      <table id="holdingsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Symbol</th>
+            <th>Sector</th>
+            <th>Qty</th>
+            <th>Avg Cost</th>
+            <th>LTP</th>
+            <th>Day Chg %</th>
+            <th>Invested</th>
+            <th>Current Value</th>
+            <th>P&amp;L</th>
+            <th>P&amp;L %</th>
+            <th>Weight</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head"><h2>Open Positions</h2></div>
+    <div class="table-scroll" style="max-height: none;">
+      <table id="positionsTable">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Segment</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>Net Qty</th>
+            <th>Buy Avg</th>
+            <th>Sell Avg</th>
+            <th>Realized</th>
+            <th>Unrealized</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Diversification</h2></div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">Avg Pairwise Correlation</span><span class="value tabular" id="poCorr">--</span></div>
+      <div class="stat"><span class="label">Concentration (HHI)</span><span class="value tabular" id="poHHI">--</span></div>
+    </div>
+    <p class="muted" style="font-size:12px; margin-top:6px;">
+      HHI &lt; 1500 = low concentration, 1500-2500 = moderate, &gt; 2500 = high (standard finance convention).
+    </p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Most Correlated Pairs</h2></div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="corrPairsTable">
+        <thead><tr><th>Stock A</th><th>Stock B</th><th>Correlation</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head">
+      <h2>Rebalancing Suggestion (Inverse-Volatility Weighting)</h2>
+      <span class="hint">a defensible baseline, not a guaranteed-optimal target — see Backtest page for why full mean-variance optimization isn't used</span>
+    </div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="rebalanceTable">
+        <thead><tr><th>Symbol</th><th>Current Weight</th><th>Annualized Vol</th><th>Suggested Weight</th><th>Delta</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script src="/portfolio.js"></script>
+</body>
+</html>

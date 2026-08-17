@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smart Money Footprint Pro — Backtest</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Smart Money Footprint Pro</h1>
+    <span class="hint">Dashboard 7 · Backtest</span>
+  </div>
+  <div class="status-bar">
+    <a class="pill navlink" href="/">Overview</a>
+    <a class="pill navlink" href="/scanner.html">Scanner</a>
+    <a class="pill navlink" href="/portfolio.html">Portfolio</a>
+    <a class="pill navlink" href="/chat.html">AI Chat</a>
+  </div>
+</header>
+
+<div id="backtestWarning" class="warning hidden">
+  No backtest data yet — the scoring engine hasn't been run against historical data. Trigger a backtest run from the server.
+</div>
+
+<main class="grid">
+
+  <section class="card">
+    <div class="card-head"><h2>Coverage</h2></div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">Scored Rows</span><span class="value tabular" id="btRows">--</span></div>
+      <div class="stat"><span class="label">Date Range</span><span class="value tabular" id="btRange" style="font-size:14px;">--</span></div>
+      <div class="stat"><span class="label">Sampled Dates</span><span class="value tabular" id="btDates">--</span></div>
+    </div>
+    <p class="muted" style="font-size:12px; margin-top:6px;">
+      Scores recomputed historically from OHLC only — OI buildup, delivery %, and bulk/block deals aren't available
+      retroactively, so they're forced neutral. This measures the predictive value of the technical ~75% of the score.
+    </p>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head"><h2>Forward Return by Smart Money Score</h2><span class="hint">does a higher score actually predict a better forward return?</span></div>
+    <canvas id="bucketChart" height="90"></canvas>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head"><h2>Score Bucket Detail</h2></div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="bucketTable">
+        <thead>
+          <tr>
+            <th>Score Range</th><th>N</th>
+            <th>5d Avg Return</th><th>5d Win %</th>
+            <th>10d Avg Return</th><th>10d Win %</th>
+            <th>20d Avg Return</th><th>20d Win %</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head"><h2>Forward Return by Trade Quality Grade</h2></div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="gradeTable">
+        <thead><tr><th>Grade</th><th>N</th><th>5d Avg Return</th><th>10d Avg Return</th><th>20d Avg Return</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head">
+      <h2>Strategy Optimization · Factor Information Coefficient</h2>
+      <span class="hint">correlation between each individual factor and forward return — does it actually carry signal alone?</span>
+    </div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="icTable">
+        <thead><tr><th>Factor</th><th>5d IC</th><th>10d IC</th><th>20d IC</th><th>N (20d)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:12px; margin-top:8px;">
+      IC (Information Coefficient) is the Pearson correlation between the factor value and forward return.
+      As a rough guide: |IC| &gt; 0.05 is considered weak-but-real signal in equity factor research, &gt; 0.1 is strong.
+      Values near zero mean the factor had no measurable predictive value in this sample.
+    </p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>ML Model vs Rule-Based Score</h2></div>
+    <div class="fiidii-summary">
+      <div class="stat"><span class="label">ML Test IC (20d)</span><span class="value tabular" id="mlIC">--</span></div>
+      <div class="stat"><span class="label">Baseline Test IC (20d)</span><span class="value tabular" id="mlBaselineIC">--</span></div>
+      <div class="stat"><span class="label">Test MAE</span><span class="value tabular" id="mlMAE">--</span></div>
+    </div>
+    <p id="mlVerdict" class="muted" style="font-size:12px; margin-top:6px;"></p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>ML Feature Importances</h2></div>
+    <canvas id="mlImportanceChart" height="100"></canvas>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head">
+      <h2>Candidate Factor Lab · New Factor Families</h2>
+      <span class="hint">screening alternative factors (reversal, medium-term momentum, low-vol, liquidity, 52w-high) for real predictive value, before touching the current score</span>
+    </div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="candidateICTable">
+        <thead><tr><th>Factor</th><th>5d IC</th><th>10d IC</th><th>20d IC</th><th>N (20d)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:12px; margin-top:8px;">
+      Reversal factors confirm the effect with a <strong>negative</strong> IC (recent losers outperform next).
+      Amihud illiquidity and 52w-high proximity confirm with a <strong>positive</strong> IC. Low-volatility confirms
+      with a <strong>negative</strong> IC (higher realized vol, lower forward return). Same |IC| &gt; 0.05 / &gt; 0.1
+      guide as above applies. Not yet wired into the Smart Money Score — screening only.
+    </p>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head">
+      <h2>Seasonality</h2>
+      <span class="hint">day-of-week and turn-of-month forward-return patterns — market-wide, not stock-specific</span>
+    </div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="seasonalityTable">
+        <thead><tr><th>Bucket</th><th>N (20d)</th><th>5d Avg Return</th><th>10d Avg Return</th><th>20d Avg Return</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card wide">
+    <div class="card-head">
+      <h2>Smart Money Concepts Signal Validation</h2>
+      <span class="hint">does an unfilled FVG or order block retest actually predict a better forward return than baseline?</span>
+    </div>
+    <div class="table-scroll" style="max-height:none;">
+      <table id="smcTable">
+        <thead><tr><th>Signal</th><th>N</th><th>5d Avg Return</th><th>10d Avg Return</th><th>20d Avg Return</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script src="/backtest.js"></script>
+</body>
+</html>

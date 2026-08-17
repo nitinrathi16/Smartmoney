@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smart Money Footprint Pro — AI Chat</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Smart Money Footprint Pro</h1>
+    <span class="hint">Dashboard 6 · AI Chat</span>
+  </div>
+  <div class="status-bar">
+    <a class="pill navlink" href="/">Overview</a>
+    <a class="pill navlink" href="/scanner.html">Scanner</a>
+    <a class="pill navlink" href="/portfolio.html">Portfolio</a>
+    <a class="pill navlink" href="/backtest.html">Backtest</a>
+  </div>
+</header>
+
+<main class="chat-wrap">
+  <div id="chatLog" class="chat-log">
+    <div class="chat-empty">
+      <p class="muted">Ask about the scanner universe — try one of these:</p>
+      <div class="chip-row" id="exampleChips"></div>
+    </div>
+  </div>
+
+  <form id="chatForm" class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="e.g. breakout candidates with low risk" autocomplete="off" />
+    <button type="submit">Ask</button>
+  </form>
+</main>
+
+<script src="/explain-modal.js"></script>
+<script src="/chat.js"></script>
+</body>
+</html>
