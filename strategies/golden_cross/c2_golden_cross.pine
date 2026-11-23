@@ -1,0 +1,67 @@
+//@version=6
+// C2 "Golden Cross Portfolio" — single-symbol version of the rules backtested in
+// strategies/golden_cross (see RESULTS.md).
+//   BUY  : SMA50 crosses above SMA200 at the close -> fill at next bar open
+//   SELL : SMA50 crosses below SMA200 at the close -> fill at next bar open
+//   No stops, no extra filters. Costs 0.15% per side.
+// In the portfolio version each position is 1/20 of equity; here each trade uses
+// 95% of equity so the per-stock stats are readable. (At 100% TradingView rejects
+// the order whenever the next open gaps up, because commission pushes the cost
+// above available cash.) Use the daily chart.
+strategy("C2 Golden Cross Portfolio", shorttitle = "C2 GC", overlay = true,
+     initial_capital = 1000000, currency = currency.INR,
+     default_qty_type = strategy.percent_of_equity, default_qty_value = 95,
+     commission_type = strategy.commission.percent, commission_value = 0.15,
+     process_orders_on_close = false, pyramiding = 0)
+
+fastLen   = input.int(50, "Fast SMA", minval = 1)
+slowLen   = input.int(200, "Slow SMA", minval = 2)
+watchGap  = input.float(1.0, "WATCH: max gap below SMA200 (%)", minval = 0)
+benchSym  = input.symbol("NSE:NIFTY", "Benchmark for 6-month strength")
+startDate = input.time(timestamp("2010-01-01"), "Trade from")
+showTable = input.bool(true, "Show status table")
+
+fast = ta.sma(close, fastLen)
+slow = ta.sma(close, slowLen)
+goldenCross = ta.crossover(fast, slow)
+deathCross  = ta.crossunder(fast, slow)
+above = fast > slow
+
+spread   = (fast / slow - 1) * 100
+spread5  = (fast[5] / slow[5] - 1) * 100
+barsSince = ta.barssince(goldenCross or deathCross)
+
+state = goldenCross ? "BUY" : deathCross ? "SELL" : above ? "HOLD" :
+     (spread > -watchGap and spread > spread5) ? "WATCH" : "AVOID"
+
+// 6-month (126 sessions) return vs benchmark, used to rank BUYs across stocks
+benchClose = request.security(benchSym, timeframe.period, close)
+rs6m = (close / close[126] - 1 - (benchClose / benchClose[126] - 1)) * 100
+
+// ---------------- orders
+inWindow = time >= startDate
+if goldenCross and inWindow and barstate.isconfirmed
+    strategy.entry("C2", strategy.long, comment = "Golden cross")
+    alert(syminfo.ticker + ": C2 BUY at next open (golden cross). 6m vs NIFTY " + str.tostring(rs6m, "#.0") + "%", alert.freq_once_per_bar_close)
+if deathCross and barstate.isconfirmed
+    strategy.close("C2", comment = "Death cross")
+    alert(syminfo.ticker + ": C2 SELL at next open (death cross)", alert.freq_once_per_bar_close)
+
+// ---------------- visuals
+plot(fast, "SMA fast", color = color.new(color.orange, 0), linewidth = 2)
+plot(slow, "SMA slow", color = color.new(color.blue, 0), linewidth = 2)
+bgcolor(above ? color.new(color.green, 92) : na, title = "Uptrend (fast > slow)")
+plotshape(goldenCross, "Golden cross", shape.triangleup, location.belowbar, color.green, size = size.small, text = "GC")
+plotshape(deathCross, "Death cross", shape.triangledown, location.abovebar, color.red, size = size.small, text = "DC")
+
+var table t = table.new(position.top_right, 2, 4, border_width = 1)
+if showTable and barstate.islast
+    stateColor = state == "BUY" or state == "HOLD" ? color.green : state == "SELL" ? color.red : state == "WATCH" ? color.orange : color.gray
+    table.cell(t, 0, 0, "C2 state", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 0, state, text_color = color.white, bgcolor = stateColor)
+    table.cell(t, 0, 1, "Bars since cross", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 1, na(barsSince) ? "--" : str.tostring(barsSince), text_color = color.white, bgcolor = color.new(color.gray, 50))
+    table.cell(t, 0, 2, "SMA gap %", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 2, str.tostring(spread, "#.00"), text_color = color.white, bgcolor = color.new(color.gray, 50))
+    table.cell(t, 0, 3, "6m vs NIFTY %", text_color = color.white, bgcolor = color.new(color.gray, 30))
+    table.cell(t, 1, 3, na(rs6m) ? "--" : str.tostring(rs6m, "#.0"), text_color = color.white, bgcolor = color.new(color.gray, 50))

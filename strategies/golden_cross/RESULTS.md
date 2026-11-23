@@ -160,3 +160,15 @@ The data comes from `GET /api/strategies/golden-cross`, served by
 `live_signals.make_router(load_daily, universe, load_held)`. Add that router to the
 FastAPI backend. `test_live_signals.py` checks that the live signals fire on exactly the
 same days as the backtest's crosses.
+
+## TradingView
+
+`c2_golden_cross.pine` is the single-stock C2 strategy in Pine Script v6. It plots
+SMA50/200, GC/DC markers, the trend background and a status table (state, bars since
+the cross, SMA gap, 6-month return vs NIFTY), and it sends an `alert()` on every
+cross. Each trade uses 95% of equity: at 100%, TradingView rejects the entry whenever
+the next open gaps up, because the commission pushes the cost above available cash.
+The portfolio version's 1/20 slot sizing and cross-stock ranking can't be done in a
+single-symbol Pine strategy. Use the scanner for those.
+On NSE:INDHOTEL it takes the same 9 entries as the Python backtest, including
+2020-10-21 → 2025-07-07 at +679%.
