@@ -151,3 +151,12 @@ C2 was picked on in-sample Sharpe/Calmar and frozen before the out-of-sample run
 To rerun: put one CSV per symbol in `data/` (columns `date,open,high,low,close,volume`,
 plus `NIFTY.csv`), then run `python3 backtest.py`, then the other scripts. Market data is
 not committed to the repo.
+
+## Live scanner
+
+C2 runs live in the Smart Money Scanner (`scanner.html`): a "Golden Cross Portfolio
+(C2)" panel listing today's buy/sell/watch names, plus a Golden Cross column and filter.
+The data comes from `GET /api/strategies/golden-cross`, served by
+`live_signals.make_router(load_daily, universe, load_held)`. Add that router to the
+FastAPI backend. `test_live_signals.py` checks that the live signals fire on exactly the
+same days as the backtest's crosses.
