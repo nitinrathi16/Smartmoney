@@ -1,7 +1,10 @@
 # Golden Cross Plus — Strategy Draft (v0.1)
 
-> Status: **DRAFT** — rules are not backtested yet. Every number below is a
-> starting assumption to be tested; none is a claim about performance.
+> Status: **TESTED — the v0.1 draft below failed** (CAGR −0.5%, 74 trades in 17
+> years). The rule set that passed is **C2 "Golden Cross Portfolio"**: enter on
+> the cross, exit on the death cross, 20 equal slots, no stops. See
+> [RESULTS.md](RESULTS.md) for the full backtest and its survivorship-bias caveat.
+> The draft is kept below unchanged as the pre-test record.
 
 ## 1. Idea
 
