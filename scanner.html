@@ -38,6 +38,14 @@
     <div id="alertsFeed" class="alerts-feed"><span class="muted">Loading...</span></div>
   </div>
 
+  <div class="card" id="gcPanel" style="margin-bottom:16px;">
+    <div class="card-head">
+      <h2>Golden Cross Portfolio (C2)</h2>
+      <span class="hint" id="gcAsOf">SMA50/200 cross · act at next open · 20 equal slots</span>
+    </div>
+    <div id="gcSignals" class="gc-signals"><span class="muted">Loading...</span></div>
+  </div>
+
   <div class="slicer-bar" id="slicerBar">
     <div class="slicer-group">
       <label for="f-index">Universe</label>
@@ -79,6 +87,17 @@
       <select id="f-volspike">
         <option value="">All</option>
         <option value="yes">Spiking only</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label for="f-gc">Golden Cross</label>
+      <select id="f-gc">
+        <option value="">All</option>
+        <option value="BUY">BUY (cross today)</option>
+        <option value="SELL">SELL (death cross today)</option>
+        <option value="HOLD">HOLD (50 above 200)</option>
+        <option value="WATCH">WATCH (near cross)</option>
+        <option value="AVOID">AVOID (50 below 200)</option>
       </select>
     </div>
     <div class="slicer-group">
@@ -133,6 +152,7 @@
           <th data-sort="volume_spike">Vol Spike</th>
           <th data-sort="oi_buildup">OI Buildup</th>
           <th data-sort="delivery_pct">Delivery %</th>
+          <th data-sort="gc_state" title="C2 Golden Cross Portfolio state">Golden Cross</th>
           <th>Alerts</th>
         </tr>
       </thead>

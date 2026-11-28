@@ -558,3 +558,25 @@ td.score-cell { position: relative; padding: 0; }
 .alert-severity-strong .alert-severity-dot { background: var(--critical); }
 .alert-severity-notable .alert-severity-dot { background: var(--warning); }
 .alert-severity-info .alert-severity-dot { background: var(--text-muted); }
+
+/* ---------- Golden Cross (C2) ---------- */
+.gc-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gc-pill .gc-days { font-weight: 400; opacity: 0.8; margin-left: 4px; }
+.gc-BUY   { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.gc-SELL  { color: var(--critical); background: color-mix(in srgb, var(--critical) 14%, transparent); }
+.gc-HOLD  { color: var(--good); border-style: dashed; }
+.gc-WATCH { color: var(--warning); }
+.gc-AVOID { color: var(--text-muted); border-color: transparent; }
+.gc-signals { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.gc-group { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
+.gc-group-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.gc-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.gc-list .clickable { cursor: pointer; }

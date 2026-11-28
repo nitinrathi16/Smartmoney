@@ -2,6 +2,15 @@ let allResults = [];
 let allSectors = [];
 let currentSort = "smart_money_score";
 let currentDir = "desc";
+let gcBySymbol = {};   // C2 Golden Cross state per symbol, from /api/strategies/golden-cross
+const GC_ORDER = { BUY: 0, WATCH: 1, HOLD: 2, SELL: 3, AVOID: 4 };
+const GC_HELP = {
+  BUY: "Golden cross at last close: buy at next open (C2)",
+  SELL: "Death cross at last close: sell at next open (C2)",
+  HOLD: "SMA50 above SMA200: in a golden-cross trend",
+  WATCH: "SMA50 within 1% below SMA200 and closing in",
+  AVOID: "SMA50 below SMA200",
+};
 
 function scoreTone(v) {
   if (v == null) return "";
@@ -51,6 +60,7 @@ function getFilters() {
     minOptOpp: parseFloat(document.getElementById("f-optopp").value) || null,
     maxRisk: document.getElementById("f-risk").value === "" ? null : parseFloat(document.getElementById("f-risk").value),
     minDelivery: parseFloat(document.getElementById("f-delivery").value) || null,
+    gc: document.getElementById("f-gc").value,
   };
 }
 
@@ -69,6 +79,7 @@ function applyFilters(rows, f) {
     if (f.minOptOpp != null && (r.option_opportunity_score == null || r.option_opportunity_score < f.minOptOpp)) return false;
     if (f.maxRisk != null && (r.risk_score == null || r.risk_score > f.maxRisk)) return false;
     if (f.minDelivery != null && (r.delivery_pct == null || r.delivery_pct < f.minDelivery)) return false;
+    if (f.gc && r.gc_state !== f.gc) return false;
     return true;
   });
 }
@@ -79,6 +90,11 @@ function sortRows(rows, sortBy, dir) {
     let av = a[sortBy];
     let bv = b[sortBy];
     if (sortBy === "volume_spike") { av = av ? 1 : 0; bv = bv ? 1 : 0; }
+    // gc_state: "desc" (default click) puts BUY first
+    if (sortBy === "gc_state") {
+      av = av == null ? null : -GC_ORDER[av];
+      bv = bv == null ? null : -GC_ORDER[bv];
+    }
     if (av == null && bv == null) return 0;
     if (av == null) return 1;
     if (bv == null) return -1;
@@ -107,7 +123,7 @@ function render() {
   tbody.innerHTML = "";
 
   if (!filtered.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="15">No stocks match these filters.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="16">No stocks match these filters.</td></tr>`;
     return;
   }
 
@@ -129,19 +145,75 @@ function render() {
       <td>${r.volume_spike ? '<span class="dot-flag">●</span>' : ""}</td>
       <td>${r.oi_buildup || "--"}</td>
       <td class="tabular">${r.delivery_pct == null ? "--" : r.delivery_pct}</td>
+      <td>${gcPill(r)}</td>
       <td>${alerts}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+// ---------- golden cross (C2) ----------
+
+function gcPill(r) {
+  if (!r.gc_state) return "--";
+  const d = r.gc_days_since_cross;
+  const days = r.gc_state === "BUY" || r.gc_state === "SELL" ? "today" : d == null ? "" : `${d}d`;
+  const tip = `${GC_HELP[r.gc_state]} · SMA50/200 gap ${r.gc_spread_pct ?? "--"}%`
+    + (r.gc_rs_6m_pct == null ? "" : ` · 6m vs NIFTY ${r.gc_rs_6m_pct}%`);
+  return `<span class="gc-pill gc-${r.gc_state}" title="${tip}">${r.gc_state}<span class="gc-days">${days}</span></span>`;
+}
+
+function gcChip(r, extra = "") {
+  return `<span class="gc-pill gc-${r.gc_state} clickable" data-symbol="${r.symbol}" title="${GC_HELP[r.gc_state]}">${r.symbol}${extra}</span>`;
+}
+
+async function loadGoldenCross() {
+  const box = document.getElementById("gcSignals");
+  let data;
+  try {
+    const res = await fetch("/api/strategies/golden-cross");
+    if (!res.ok) throw new Error(res.status);
+    data = await res.json();
+  } catch (e) {
+    gcBySymbol = {};
+    box.innerHTML = `<span class="muted">Golden cross endpoint not connected (/api/strategies/golden-cross). See strategies/golden_cross/live_signals.py.</span>`;
+    return;
+  }
+  gcBySymbol = Object.fromEntries(data.results.map((r) => [r.symbol, r]));
+  document.getElementById("gcAsOf").textContent =
+    `signals at close ${data.asOf || "--"} · act at next open · ${data.freeSlots}/${data.slots} slots free`;
+
+  const watch = data.results.filter((r) => r.gc_state === "WATCH");
+  const holdCount = data.results.filter((r) => r.gc_state === "HOLD").length;
+  const buys = data.buys.map((r) => gcChip(r, r.gc_take ? "" : " (no slot)")).join("");
+  const sells = data.sells.map((r) => gcChip(r)).join("");
+  box.innerHTML = `
+    <div class="gc-group"><span class="gc-group-title">Buy at next open</span>
+      <div class="gc-list">${buys || '<span class="muted">No golden cross today</span>'}</div></div>
+    <div class="gc-group"><span class="gc-group-title">Sell at next open</span>
+      <div class="gc-list">${sells || '<span class="muted">No death cross today</span>'}</div></div>
+    <div class="gc-group"><span class="gc-group-title">Watch · near cross</span>
+      <div class="gc-list">${watch.map((r) => gcChip(r, ` ${r.gc_spread_pct}%`)).join("") || '<span class="muted">None</span>'}</div></div>
+    <div class="gc-group"><span class="gc-group-title">In uptrend (HOLD)</span>
+      <span class="tabular">${holdCount} stocks</span></div>
+  `;
+}
+
+function mergeGoldenCross(rows) {
+  return rows.map((r) => ({ ...r, ...(gcBySymbol[r.symbol] ? stripSymbol(gcBySymbol[r.symbol]) : {}) }));
+}
+
+function stripSymbol({ symbol, ...rest }) {
+  return rest;
+}
+
 // ---------- data loading ----------
 
 async function loadScanner() {
-  const res = await fetch("/api/scanner");
+  const [res] = await Promise.all([fetch("/api/scanner"), loadGoldenCross()]);
   const data = await res.json();
 
-  allResults = data.results;
+  allResults = mergeGoldenCross(data.results);
   allSectors = data.sectors;
 
   const sectorSelect = document.getElementById("f-sector");
@@ -244,6 +316,11 @@ async function loadAlerts() {
     feed.appendChild(row);
   }
 }
+
+document.getElementById("gcSignals").addEventListener("click", (e) => {
+  const el = e.target.closest("[data-symbol]");
+  if (el) showExplain(el.dataset.symbol);
+});
 
 document.getElementById("alertsFeed").addEventListener("click", (e) => {
   const el = e.target.closest(".alert-symbol[data-symbol]");
